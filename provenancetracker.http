@@ -1,0 +1,246 @@
+@provenancetracker_HostAddress = http://localhost:5199
+
+###
+# AuthController Endpoints
+###
+
+# @name registerUser
+# Registers a new user with the "User" role.
+POST {{provenancetracker_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "Username": "testuser",
+  "Email": "testuser@example.com",
+  "Password": "Password123!",
+  "Role": "User"
+}
+
+> {%
+    client.test("Register User - OK", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+###
+
+# @name registerParticipant
+# Registers a new user with the "Participant" role.
+POST {{provenancetracker_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "Username": "testparticipant",
+  "Email": "testparticipant@example.com",
+  "Password": "Password123!",
+  "Role": "Participant"
+}
+
+> {%
+    client.test("Register Participant - OK", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+###
+
+# @name loginUser
+# Logs in a user and retrieves a token.
+POST {{provenancetracker_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "Email": "testuser@example.com",
+  "Password": "Password123!"
+}
+
+> {%
+    client.test("Login User - OK", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.token, "Token not found in response");
+    });
+%}
+
+###
+
+# @name loginParticipant
+# Logs in a participant and retrieves a token.
+POST {{provenancetracker_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "Email": "testparticipant@example.com",
+  "Password": "Password123!"
+}
+
+> {%
+    client.test("Login Participant - OK", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.token, "Token not found in response");
+    });
+%}
+
+###
+
+# @name loginAdmin
+# Logs in an admin and retrieves a token.
+POST {{provenancetracker_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "Email": "moustafa1moon@gmail.com",
+  "Password": "123456"
+}
+
+> {%
+    client.test("Login Admin - OK", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.token, "Token not found in response");
+    });
+%}
+
+###
+
+# @name externalLogin
+# Logs in a user with an external provider (e.g., Google, GitHub).
+POST {{provenancetracker_HostAddress}}/api/auth/external-login
+Content-Type: application/json
+
+{
+  "Email": "externaluser@example.com",
+  "Username": "externaluser"
+}
+
+> {%
+    client.test("External Login - OK", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.token, "Token not found in response");
+    });
+%}
+
+###
+# UserController Endpoints
+###
+
+@user_token = {{loginUser.response.body.token}}
+
+# @name approveParticipantRole
+# Allows a user to request the "Participant" role.
+PUT {{provenancetracker_HostAddress}}/api/user/participant-approve
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Approve Participant Role - OK", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+###
+# ParticipantController Endpoints
+###
+
+@participant_token = {{loginParticipant.response.body.token}}
+@productId = "a0b1c2d3-e4f5-4a6b-7c8d-9e0f1a2b3c4d"
+
+# @name createTransaction
+# Creates a new transaction for a product.
+POST {{provenancetracker_HostAddress}}/api/participant
+Content-Type: application/json
+Authorization: Bearer {{participant_token}}
+
+{
+  "productId": "{{productId}}",
+  "status": "In Transit",
+  "description": "Package picked up from warehouse",
+  "location": "Warehouse A"
+}
+
+> {%
+    client.test("Create Transaction - Created", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+%}
+
+###
+
+# @name getParticipantTransactions
+# Gets all transactions for the logged-in participant.
+GET {{provenancetracker_HostAddress}}/api/participant
+Authorization: Bearer {{participant_token}}
+
+> {%
+    client.test("Get Participant Transactions - OK", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+###
+# TransactionController Endpoints
+###
+
+# @name getProductChain
+# Gets the transaction chain for a specific product.
+GET {{provenancetracker_HostAddress}}/api/transaction/{{productId}}
+
+> {%
+    client.test("Get Product Chain - OK", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+###
+# AdminController Endpoints
+###
+
+@admin_token = {{loginAdmin.response.body.token}}
+@transactionId = {{createTransaction.response.body.id}}
+
+# @name getPendingTransactions
+# Gets all pending transactions.
+GET {{provenancetracker_HostAddress}}/api/admin/pending-transactions
+Authorization: Bearer {{admin_token}}
+
+> {%
+    client.test("Get Pending Transactions - OK", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+###
+
+# @name getPendingUsers
+# Gets all users pending approval to be participants.
+GET {{provenancetracker_HostAddress}}/api/admin/pending-users
+Authorization: Bearer {{admin_token}}
+
+> {%
+    client.test("Get Pending Users - OK", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+###
+
+# @name confirmTransaction
+# Confirms a pending transaction.
+POST {{provenancetracker_HostAddress}}/api/admin/confirm/{{transactionId}}
+Authorization: Bearer {{admin_token}}
+
+> {%
+    client.test("Confirm Transaction - OK", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+###
+
+# @name cancelTransaction
+# Cancels a transaction.
+POST {{provenancetracker_HostAddress}}/api/admin/cancel/{{transactionId}}
+Authorization: Bearer {{admin_token}}
+
+> {%
+    client.test("Cancel Transaction - OK", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}

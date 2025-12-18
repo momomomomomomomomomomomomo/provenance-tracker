@@ -1,0 +1,57 @@
+## Build results
+bin/
+obj/
+
+## Rider and VS Code
+.idea/
+.vscode/
+
+## User-specific files
+*.user
+*.userprefs
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Logs
+*.log
+
+## Transient files
+*.tmp
+*.temp
+*.swp
+*.swo
+
+## NuGet
+*.nupkg
+*.snupkg
+**/packages/
+*.nuget.props
+*.nuget.targets
+.nuget/
+
+## Dotnet tools
+.dotnet/
+.dotnet-tools/
+
+## Coverage
+coverage/
+*.coverage
+*.coveragexml
+TestResult*/
+
+## Entity Framework
+[Mm]igrations/obj/
+
+## ASP.NET generated
+wwwroot/lib/
+
+## OS generated files
+Thumbs.db
+.DS_Store
+
+## Secrets (ensure not committed)
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.local.json
+secrets.json
